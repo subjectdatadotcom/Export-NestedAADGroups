@@ -1,23 +1,26 @@
 <#
 .SYNOPSIS
-Retrieves detailed nested Azure AD security group hierarchy, including members and owners, for a list of specified groups.
+Retrieves detailed nested Azure AD security group hierarchy, including members and owners, for a list of specified groups—now supporting both security and mail-enabled security groups.
 
 .DESCRIPTION
-This script connects to Azure AD, reads a list of unique security group GUIDs from a CSV file, and recursively inventories each group's members and owners, including nested groups. It identifies group types (Security, M365, Mail-enabled, etc.), captures membership and ownership hierarchies, and outputs the complete group structure with relationship depth into a CSV file.
+This script connects to Azure AD and reads a list of unique security group GUIDs from a CSV file. It recursively inventories each group's members and owners, including nested groups. The script identifies group types (Security, Mail-enabled Security, Microsoft 365 Groups, etc.), captures member and ownership hierarchies, and outputs the full structure with nesting levels and relationships.
 
-The script handles the installation of required modules, supports error handling, and captures metadata such as group names, types, member UPNs, owner UPNs, and nesting levels.
+As of the latest update, recursion includes both standard Security Groups and Mail-enabled Security Groups to reflect real-world group nesting scenarios more accurately. Microsoft 365 Groups and Distribution Lists are reported but not expanded.
+
+The script handles module setup, error management, and disconnection, while producing a detailed CSV for auditing or migration prep.
 
 .EXAMPLE
 .\Export-NestedAADGroups.ps1
 
-The script reads `UniqueSecurityGroupGUIDs.csv` from the script directory and writes the nested group inventory report to `Nested_AD_Groups_Details.csv`.
+Reads `UniqueSecurityGroupGUIDs.csv` from the script directory and writes a full nested group inventory report to `Nested_AD_Groups_Details.csv`.
 
 .NOTES
-Author: SubjectData
-Required Modules: AzureAD, AzureAD.Standard.Preview (for full compatibility)
-Scope: Azure AD / Entra ID
-Last Updated: 2025-04-09
+Author: SubjectData  
+Required Modules: AzureAD, AzureAD.Standard.Preview (for full compatibility)  
+Scope: Azure AD / Entra ID  
+Last Updated: 2025-04-09  
 #>
+
 
 
 # Azure AD Nested Security Group Inventory Script
@@ -99,7 +102,8 @@ function Expand-GroupHierarchy {
         $results += $groupInfo
 
         # Recurse if Security Group
-        if ($groupType -eq "Security Group") {
+        if ($groupType -in @("Security Group", "Mail-enabled Security Group"))  {
+        # if ($groupType -eq "Security Group") {
             foreach ($nestedGroup in $nestedGroups) {
                 $nestedResult = Expand-GroupHierarchy -GroupId $nestedGroup.ObjectId -Level ($Level + 1) -ParentGUID $GroupId
                 foreach ($r in $nestedResult) {
