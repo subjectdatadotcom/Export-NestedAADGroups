@@ -156,10 +156,14 @@ foreach ($GroupGuid in $UniqueGroupsData) {
     try {
         Write-Host "Expanding group $($GroupGuid.GroupGUID)..." -ForegroundColor Cyan
         $expanded = Expand-GroupHierarchy -GroupId $GroupGuid.GroupGUID -Level 1 -ParentGUID ""
-        if ($expanded.Count -gt 0) {
+        if ($expanded -and ($expanded -is [System.Collections.IEnumerable]) -and ($expanded.Count -gt 0)) {
             $GroupDetails += $expanded
-        } else {
-            Write-Warning "No data returned for $($GroupGuid.GroupGUID)"
+        }
+        elseif ($expanded -and ($expanded -isnot [System.Collections.IEnumerable])) {
+            $GroupDetails += ,$expanded  # Wrap single object in an array
+        }
+        else {
+            Write-Warning "No data returned for $($GroupGuid.GroupName)"
         }
     } catch {
         Write-Warning "Failed to expand group $($GroupGuid.GroupGUID)"
