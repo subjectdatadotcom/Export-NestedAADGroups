@@ -75,7 +75,7 @@ function Expand-GroupHierarchy {
 
         # Get members & owners
         $membersRaw = Get-AzureADGroupMember -ObjectId $GroupId -All $true
-        $ownersRaw  = Get-AzureADGroupOwner -ObjectId $GroupId
+        $ownersRaw  = Get-AzureADGroupOwner -ObjectId $GroupId -All $true
 
         # Separate users and nested groups
         $userMembers = $membersRaw | Where-Object { $_.ObjectType -eq "User" }
